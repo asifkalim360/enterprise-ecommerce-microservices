@@ -38,6 +38,24 @@
 
     </properties>
 
+    <!-- ================================================= -->
+    <!-- Dependency Version Management                     -->
+    <!-- ================================================= -->
+
+    <dependencyManagement>
+        <dependencies>
+
+            <!-- Lombok Version -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>1.18.38</version>
+            </dependency>
+
+
+        </dependencies>
+    </dependencyManagement>
+
     <modules>
 
         <module>common-lib</module>

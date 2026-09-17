@@ -1,0 +1,187 @@
+# ==========================================================
+# Spring Boot Application Configuration
+# ==========================================================
+
+spring:
+
+  # --------------------------------------------------------
+  # Application Information
+  # --------------------------------------------------------
+
+  application:
+
+    # Microservice ka unique naam.
+    #
+    # Ye naam future me use hoga:
+    # ✔ Eureka Discovery Server
+    # ✔ Config Server
+    # ✔ Zipkin
+    # ✔ Spring Cloud
+    # ✔ Logging
+    # ✔ Monitoring
+    #
+    # Example:
+    # auth-service
+    # product-service
+    # order-service
+    name: auth-service
+
+
+  # --------------------------------------------------------
+  # Active Profile
+  # --------------------------------------------------------
+
+  profiles:
+
+    # Abhi application dev environment me chalega.
+    #
+    # Future me hum use karenge:
+    #
+    # dev   -> Local Development
+    # test  -> QA / Testing Server
+    # prod  -> Production Server
+    #
+    # Iske according Spring automatically
+    # application-dev.yml
+    # application-test.yml
+    # application-prod.yml
+    # load karega.
+    active: dev
+
+
+  # --------------------------------------------------------
+  # Database Configuration
+  # --------------------------------------------------------
+
+  datasource:
+
+    # Database Connection URL
+    #
+    # localhost
+    # = Local Machine
+    #
+    # 3306
+    # = MySQL Default Port
+    #
+    # auth_db
+    # = Database Name
+    url: jdbc:mysql://localhost:3306/ecommerce_auth_db
+
+
+    # Database Username
+    username: root
+
+    # Database Password
+    password: asif
+
+
+    # JDBC Driver
+    #
+    # Spring Boot is driver ki help se
+    # MySQL Database se connection establish karta hai.
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+  # --------------------------------------------------------
+  # JPA / Hibernate Configuration
+  # --------------------------------------------------------
+
+  jpa:
+
+    hibernate:
+
+      # Database Schema Strategy
+      #
+      # create       -> Har baar table delete karke recreate karega
+      #
+      # create-drop  -> Application band hone par delete
+      #
+      # update       -> Sirf required changes karega
+      #
+      # validate     -> Sirf validate karega
+      #
+      # none         -> Hibernate kuch nahi karega
+      #
+      # Enterprise me
+      # Production:
+      # validate
+      #
+      # Development:
+      # update
+      ddl-auto: update
+
+
+    # SQL Console me print karega.
+    #
+    # Development ke time useful.
+    #
+    # Production me generally false.
+    show-sql: true
+
+
+    properties:
+
+      hibernate:
+
+        # SQL ko readable format me print karega.
+        #
+        # Without:
+        # select * from user where...
+        #
+        # With:
+        # Proper Formatting
+        format_sql: true
+
+
+# ==========================================================
+# Embedded Server Configuration
+# ==========================================================
+
+server:
+
+  # Embedded Tomcat kis port pe chalega.
+  #
+  # Browser:
+  #
+  # http://localhost:8081
+  #
+  # Future:
+  #
+  # Auth Service      -> 8081
+  # Product Service   -> 8082
+  # Order Service     -> 8083
+  # Payment Service   -> 8084
+  port: 8081
+
+
+# ==========================================================
+# Logging Configuration
+# ==========================================================
+
+logging:
+
+  level:
+
+    # Root Logging Level
+    #
+    # TRACE
+    # DEBUG
+    # INFO
+    # WARN
+    # ERROR
+    #
+    # Development:
+    # DEBUG / INFO
+    #
+    # Production:
+    # INFO / WARN
+    root: INFO
+
+# ==========================================================
+# JWT Configuration
+# ==========================================================
+jwt:
+  secret: ${JWT_SECRET} # environment variable
+  expiration: 900000
+  refresh-expiration: 604800000
+

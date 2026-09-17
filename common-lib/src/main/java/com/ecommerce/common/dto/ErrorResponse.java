@@ -23,7 +23,7 @@ public class ErrorResponse {
     private LocalDateTime timestamp = LocalDateTime.now();
 
     // HTTP ka Status code
-    private int Status;
+    private int status;
 
     // Error Name
     private String error;

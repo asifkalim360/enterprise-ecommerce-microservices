@@ -1,118 +1,172 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!-- Root Project Declaration -->  <!-- Maven Schema Location line 6 me hai -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+        https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-         xsi:schemaLocation="
-         http://maven.apache.org/POM/4.0.0
-         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+        <!-- POM Model Version -->
+        <!-- Har Maven Project me 4.0.0 hi hota hai -->
+        <modelVersion>4.0.0</modelVersion>
 
-    <!-- Maven POM Version -->
-    <modelVersion>4.0.0</modelVersion>
 
-    <!-- Company Name -->
-    <groupId>com.enterprise</groupId>
+        <!-- ================================================= -->
+        <!-- Spring Boot Parent                                -->
+        <!-- ================================================= -->
 
-    <!-- Parent Project Name -->
-    <artifactId>enterprise-ecommerce</artifactId>
+        <!--
+            Ye Spring Boot ka Official Parent POM hai.
 
-    <!-- Project Version -->
-    <version>1.0.0</version>
+            Isse hume automatically milta hai:
 
-    <!-- Parent Project -->
-    <packaging>pom</packaging>
+            ✔ Spring Boot Dependency Versions
+            ✔ Plugin Versions
+            ✔ Maven Default Configurations
+            ✔ Testing Dependencies Compatibility
+            ✔ Packaging Support
 
-    <properties>
+            Isliye child module me dependency ka version
+            manually likhne ki zarurat nahi padti.
+        -->
 
-        <!-- Java Version -->
-        <java.version>21</java.version>
+        <parent>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-parent</artifactId>
+            <version>3.5.16</version>
+            <!-- Local Parent Search Disable -->
+            <relativePath/>
+        </parent>
 
-        <!-- Spring Boot Version -->
-        <spring.boot.version>4.0.0-M3</spring.boot.version>
 
-        <!-- Maven Compiler Plugin Version -->
-        <maven.compiler.plugin.version>3.14.0</maven.compiler.plugin.version>
+        <!-- ================================================= -->
+        <!-- Company Information                               -->
+        <!-- ================================================= -->
 
-        <!-- Project Encoding -->
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Ye company ya organization ka unique namespace hota hai. Saare child modules isi groupId ko inherit karenge. -->
+        <groupId>com.enterprise</groupId>
+        <!-- Parent Project Name -->
+        <artifactId>enterprise-ecommerce</artifactId>
+        <!-- Current Project Version -->
+        <version>1.0.0</version>
+        <!-- Agar version change hoga to saare child modules automatically same version use karenge. -->
 
-    </properties>
+        <!--
+            Packaging = pom
+            Iska matlab: Ye executable application nahi hai. Ye sirf Parent Project hai.
+            Iska kaam hai:
+            ✔ Common Configuration
+            ✔ Dependency Management
+            ✔ Plugin Management
+            ✔ Modules ko Manage karna
+        -->
+        <packaging>pom</packaging>
 
-    <!-- ================================================= -->
-    <!-- Dependency Version Management                     -->
-    <!-- ================================================= -->
 
-    <dependencyManagement>
-        <dependencies>
+        <!-- ================================================= -->
+        <!-- Global Properties                                 -->
+        <!-- ================================================= -->
+        <!--   Properties ek jagah define karte hain. Baad me ${java.version} ya ${lombok.version} se use karte hain. -->
 
+        <properties>
+            <!-- Java Version -->
+            <java.version>21</java.version>
+            <!-- UTF-8 Encoding -->
+            <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
             <!-- Lombok Version -->
-            <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>1.18.38</version>
-            </dependency>
+            <lombok.version>1.18.38</lombok.version>
+            <!-- Swagger/OpenAPI version -->
+<!--            <springdoc.version>3.0.3</springdoc.version>-->
+            <springdoc.version>2.8.13</springdoc.version>
+        </properties>
 
 
-        </dependencies>
-    </dependencyManagement>
+        <!-- ================================================= -->
+        <!-- Dependency Management                             -->
+        <!-- ================================================= -->
+        <!-- DependencyManagement:  Dependency install nahi karta. Sirf version manage karta hai.
+            Example: Parent -> lombok 1.18.38
+                     Child Module ->  <dependency>lombok</dependency>
+            Child me version likhne ki zarurat nahi.
+        -->
+        <dependencyManagement>
+            <dependencies>
+                <!-- Lombok -->
+                <dependency>
+                    <groupId>org.projectlombok</groupId>
+                    <artifactId>lombok</artifactId>
+                    <version>${lombok.version}</version>
+                </dependency>
 
-    <modules>
+                <!-- Swagger / OpenAPI -->
+                <dependency>
+                    <groupId>org.springdoc</groupId>
+                    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                    <version>${springdoc.version}</version>
+                </dependency>
+            </dependencies>
+        </dependencyManagement>
 
-        <module>common-lib</module>
 
-<!--        <module>config-server</module>-->
+        <!-- ================================================= -->
+        <!-- Multi Module Configuration                        -->
+        <!-- ================================================= -->
+        <!--Maven Reactor Build: Jab hum mvn clean install chalate hain
+            to Maven pehle Parent padhega
+                    ↓
+            Fir common-lib
+                    ↓
+            Fir auth-service
+            Isi order me build karega.
+        -->
+        <modules>
+            <module>common-lib</module>
+            <module>auth-service</module>
+            <module>user-service</module>
+            <!-- Future Modules -->
+            <!-- <module>config-server</module> -->
+            <!-- <module>discovery-server</module> -->
+            <!-- <module>api-gateway</module> -->
+            <!-- <module>product-service</module> -->
+            <!-- <module>inventory-service</module> -->
+            <!-- <module>cart-service</module> -->
+            <!-- <module>order-service</module> -->
+            <!-- <module>payment-service</module> -->
+            <!-- <module>notification-service</module> -->
+        </modules>
 
-<!--        <module>discovery-server</module>-->
 
-<!--        <module>api-gateway</module>-->
-
-<!--        <module>auth-service</module>-->
-
-<!--        <module>user-service</module>-->
-
-<!--        <module>product-service</module>-->
-
-<!--        <module>inventory-service</module>-->
-
-<!--        <module>cart-service</module>-->
-
-<!--        <module>order-service</module>-->
-
-<!--        <module>payment-service</module>-->
-
-<!--        <module>notification-service</module>-->
-
-    </modules>
-
-    <build>
-
-        <pluginManagement>
-
-            <plugins>
-
-                <!-- Java Compiler Plugin -->
-                <plugin>
-
-                    <groupId>org.apache.maven.plugins</groupId>
-
-                    <artifactId>maven-compiler-plugin</artifactId>
-
-                    <version>${maven.compiler.plugin.version}</version>
-
-                    <configuration>
-
-                        <source>${java.version}</source>
-
-                        <target>${java.version}</target>
-
-                    </configuration>
-
-                </plugin>
-
-            </plugins>
-
-        </pluginManagement>
-
-    </build>
+        <!-- ================================================= -->
+        <!-- Plugin Management                                 -->
+        <!-- ================================================= -->
+        <!-- PluginManagement:
+                Plugin ko execute nahi karta. Sirf configuration ko child modules ke liye available karata hai.
+                Jab child module plugin use karega tab ye configuration inherit hogi.
+        -->
+        <build>
+            <pluginManagement>
+                <plugins>
+                    <!-- Java Compiler Plugin -->
+                    <!--Java Source -> javac Compiler -> .class Files
+                        Ye plugin Java source ko compile karta hai.
+                    -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <source>${java.version}</source>
+                            <target>${java.version}</target>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>org.projectlombok</groupId>
+                                    <artifactId>lombok</artifactId>
+                                    <version>${lombok.version}</version>
+                                </path>
+                            </annotationProcessorPaths>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </pluginManagement>
+        </build>
 
 </project>

@@ -9,6 +9,8 @@ public enum ResponseStatus {
     SUCCESSS,
 
     // Request fail ho gae.
-    FAILED
+    FAILED,
+
+    ERROR
 
 }

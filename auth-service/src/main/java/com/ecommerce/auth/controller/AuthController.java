@@ -35,7 +35,7 @@ public class AuthController {
         AuthResponse respponse = authService.register(request);
 
         return ApiResponse.<AuthResponse>builder()
-                .status(ResponseStatus.SUCCESSS)
+                .status(ResponseStatus.SUCCESS)
                 .message("Registration successful.")
                 .data(respponse)
                 .build();
@@ -103,7 +103,7 @@ public class AuthController {
 
                         // ApiResponse ka status set kar rahe hain. ResponseStatus enum se SUCCESSS value aa rahi hai.
                         // Final response mein roughly: "status": "SUCCESSS"
-                        .status(ResponseStatus.SUCCESSS)
+                        .status(ResponseStatus.SUCCESS)
 
 
                         // Client ko success message bhej rahe hain.

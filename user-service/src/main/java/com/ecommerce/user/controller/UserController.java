@@ -28,7 +28,7 @@ public class UserController
         UserResponse user = userService.createUser(request);
 
         ApiResponse<UserResponse> response = ApiResponse.<UserResponse>builder()
-                .status(ResponseStatus.SUCCESSS)
+                .status(ResponseStatus.SUCCESS)
                 .message("User created successfully")
                 .data(user)
                 .path(httpRequest.getRequestURI())
@@ -48,7 +48,7 @@ public class UserController
 
         ApiResponse<UserResponse> response =
                 ApiResponse.<UserResponse>builder()
-                .status(ResponseStatus.SUCCESSS)
+                .status(ResponseStatus.SUCCESS)
                 .message("User profile create successfully")
                 .data(user)
                 .path(httpRequest.getRequestURI())
@@ -66,7 +66,7 @@ public class UserController
         UserResponse user = userService.getUserById(id);
 
         ApiResponse<UserResponse> response = ApiResponse.<UserResponse>builder()
-                .status(ResponseStatus.SUCCESSS)
+                .status(ResponseStatus.SUCCESS)
                 .message("User fetched successfully")
                 .data(user)
                 .path(httpRequest.getRequestURI())
@@ -85,7 +85,7 @@ public class UserController
         UserResponse user = userService.updateUser(id, request);
 
         ApiResponse<UserResponse> response = ApiResponse.<UserResponse>builder()
-                .status(ResponseStatus.SUCCESSS)
+                .status(ResponseStatus.SUCCESS)
                 .message("User update successfully")
                 .data(user)
                 .path(httpRequest.getRequestURI())
@@ -101,7 +101,7 @@ public class UserController
         userService.deactivateUser(id);
 
         ApiResponse<Void> response = ApiResponse.<Void>builder()
-                .status(ResponseStatus.SUCCESSS)
+                .status(ResponseStatus.SUCCESS)
                 .message("User deactivated successfully")
                 .data(null)
                 .path(httpRequest.getRequestURI())

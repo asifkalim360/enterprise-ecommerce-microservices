@@ -6,7 +6,7 @@ package com.ecommerce.common.enums;
 public enum ResponseStatus {
 
     // Request successfully complete hui
-    SUCCESSS,
+    SUCCESS,
 
     // Request fail ho gae.
     FAILED,

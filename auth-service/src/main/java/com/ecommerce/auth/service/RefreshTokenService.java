@@ -1,0 +1,15 @@
+package com.ecommerce.auth.service;
+
+import com.ecommerce.auth.entity.RefreshToken;
+
+public interface RefreshTokenService
+{
+    // Naya refresh token generate karke DB me save karega.
+    // Return value raw token hogi. jisko baad me client ko diya ja sakta hai.
+    String createRefreshToken(Long userId);
+
+    // Client se aaye token ko validate karega.
+    // valid token hone pe uska database record return hoga.
+    RefreshToken verifyRefreshToken(String token);
+
+}

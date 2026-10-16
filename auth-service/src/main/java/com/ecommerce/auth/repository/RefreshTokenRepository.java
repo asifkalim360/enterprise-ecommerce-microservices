@@ -15,4 +15,5 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     // Future me multiple device/session handle karne me useful hoga.
     // Ek user ke multiple devices/sessions ho sakte hain.
     List<RefreshToken> findByUserId(Long userId);
+
 }

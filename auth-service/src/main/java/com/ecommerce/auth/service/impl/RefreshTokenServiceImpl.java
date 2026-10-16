@@ -1,0 +1,161 @@
+
+package com.ecommerce.auth.service.impl;
+
+import com.ecommerce.auth.entity.RefreshToken;
+import com.ecommerce.auth.repository.RefreshTokenRepository;
+import com.ecommerce.auth.service.RefreshTokenService;
+import com.ecommerce.common.exception.BusinessException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.Base64;
+
+@Service // Spring ko batata hai ki ye service-layer class hai; Spring iska object (bean) manage karega.
+@RequiredArgsConstructor // Lombok final fields ke liye constructor generate karta hai, jisse dependency injection hota hai.
+@Transactional // Is class ke public methods default roop se transaction ke andar execute honge.
+public class RefreshTokenServiceImpl implements RefreshTokenService {
+
+    // Repository ki help se RefreshToken table mein data save aur search karenge.
+    // final hone ke kaaran Lombok constructor ke through dependency inject karega.
+    private final RefreshTokenRepository refreshTokenRepository;
+
+    // application.yml se refresh token ki validity milliseconds mein read hogi.
+    // Example: 604800000 milliseconds = 7 days.
+    @Value("${refresh-expiration}")
+    private long refreshTokenExpirationMs;
+
+    // Cryptographically secure random bytes generate karne ke liye object.
+    // SecureRandom predictable random numbers ke muqable mein secure tokens banata hai.
+    private final SecureRandom secureRandom = new SecureRandom();
+
+    @Override // Interface ke createRefreshToken() method ko implement kar rahe hain.
+    public String createRefreshToken(Long userId) {
+
+        // 32 random bytes ke liye array banaya.
+        // 32 bytes = 256 bits ki random entropy, jo token ko guess karna bahut mushkil banati hai.
+        byte[] randomBytes = new byte[32];
+
+        // Array mein cryptographically secure random bytes fill honge.
+        secureRandom.nextBytes(randomBytes);
+
+        // Random bytes ko URL-safe Base64 string mein convert kiya.
+        // withoutPadding() akhir ke '=' padding characters hata deta hai.
+        // Ye token ko HTTP requests mein bhejna convenient banata hai.
+        String rawToken = Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(randomBytes);
+
+        // Security ke liye raw token database mein store nahi karenge.
+        // Uska SHA-256 hash banayenge, taaki DB leak hone par raw token seedha expose na ho.
+        String tokenHash = hashToken(rawToken);
+
+        // RefreshToken entity ka naya object builder se create kar rahe hain.
+        RefreshToken refreshToken = RefreshToken.builder()
+
+                // Is refresh token ko us user se associate kar rahe hain.
+                .userId(userId)
+
+                // Database ke token column mein raw token nahi, hash save hoga.
+                .token(tokenHash)
+
+                // Current time mein configured validity add karke expiry set kar rahe hain.
+                // Milliseconds ko nanoseconds mein convert karke LocalDateTime mein add kiya.
+                .expiryDate(LocalDateTime.now()
+                        .plusNanos(refreshTokenExpirationMs * 1_000_000))
+
+                // Naya token abhi revoked nahi hai, isliye false set kiya.
+                .revoked(false)
+
+                // Builder se entity object complete kiya.
+                .build();
+
+        // Entity ko database mein insert/save kar rahe hain.
+        // @PrePersist laga hai to createdAt jaise fields save hone se pehle set ho sakte hain.
+        refreshTokenRepository.save(refreshToken);
+
+        // Client ko original raw token return kar rahe hain.
+        // Database mein iska hash hai, isliye verify karte waqt bhi hash banana hoga.
+        return rawToken;
+    }
+
+    @Override // Interface ke verifyRefreshToken() method ko implement kar rahe hain.
+    @Transactional // Method ko transaction mein execute karne ka explicit declaration.
+    public RefreshToken verifyRefreshToken(String rawToken) {
+
+        // Client ke bheje hue raw token ka wahi SHA-256 hash banaya.
+        // Same token ka deterministic hash banega, jisse DB record search ho sake.
+        String tokenHash = hashToken(rawToken);
+
+        // Hash ke basis par database mein token find kar rahe hain.
+        // Record nahi mila to Invalid refresh token exception throw hogi.
+        RefreshToken refreshToken = refreshTokenRepository
+                .findByToken(tokenHash)
+                .orElseThrow(() ->
+                        new BusinessException("Invalid refresh token"));
+
+        // Check kar rahe hain ki token pehle revoke/logout/rotation ke kaaran
+        // invalid to nahi kiya gaya.
+        if (Boolean.TRUE.equals(refreshToken.getRevoked())) {
+
+            // Revoked token se naya Access Token issue nahi hona chahiye.
+            throw new BusinessException("Refresh token has been revoked");
+        }
+
+        // Check kar rahe hain ki token ki expiry time current time se pehle hai ya nahi.
+        if (refreshToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+
+            // Expired token reject karenge.
+            // Exception transaction rollback kar sakti hai,
+            // isliye is method mein revoked status save karne ka claim nahi karenge.
+            throw new BusinessException("Refresh token has expired");
+        }
+
+        // Token database mein mila, revoked nahi hai aur expire bhi nahi hua.
+        // Validated entity caller ko return karte hain.
+        // Refresh endpoint is entity se associated user ki identity le sakta hai.
+        return refreshToken;
+    }
+
+    // Raw token ko SHA-256 hash mein convert karne wala private helper method.
+    // Isko class ke andar use karenge; bahar se call karne ki zaroorat nahi.
+    private String hashToken(String rawToken) {
+
+        // SHA-256 hashing algorithm ka instance le rahe hain.
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+            // Raw token ko UTF-8 bytes mein convert karke SHA-256 hash banaya.
+            byte[] hash = digest.digest(
+                    rawToken.getBytes(StandardCharsets.UTF_8));
+
+            // Hash bytes ko hexadecimal string mein convert karne ke liye builder.
+            StringBuilder hex = new StringBuilder();
+
+            // Hash ke har byte ko process kar rahe hain.
+            for (byte b : hash) {
+
+                // Har byte ko unsigned value ke roop mein interpret karke
+                // 2 hexadecimal characters mein convert kar rahe hain.
+                // %02x ensure karta hai ki single-digit byte ke liye leading zero aaye.
+                hex.append(String.format("%02x", b & 0xff));
+            }
+
+            // SHA-256 ke 32 bytes ka 64-character hexadecimal hash return hoga.
+            return hex.toString();
+
+        } catch (NoSuchAlgorithmException exception) {
+
+            // SHA-256 standard Java runtime mein available hota hai.
+            // Agar unavailable ho, to unexpected runtime configuration error hai.
+            throw new IllegalStateException(
+                    "SHA-256 is unavailable", exception);
+        }
+    }
+}

@@ -14,8 +14,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.HexFormat;
 
 @Service // Spring ko batata hai ki ye service-layer class hai; Spring iska object (bean) manage karega.
 @RequiredArgsConstructor // Lombok final fields ke liye constructor generate karta hai, jisse dependency injection hota hai.
@@ -36,7 +38,19 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Override // Interface ke createRefreshToken() method ko implement kar rahe hain.
-    public String createRefreshToken(Long userId) {
+    public String createRefreshToken(Long userId)
+    {
+        // Invalid user ID ke liye token create nahi karna.
+        if (userId == null || userId <= 0) {
+            throw new BusinessException("Invalid user ID");
+        }
+
+        // Expiry configuration zero ya negative nahi honi chahiye.
+        if (refreshTokenExpirationMs <= 0) {
+            throw new IllegalStateException(
+                    "Refresh token expiration must be positive"
+            );
+        }
 
         // 32 random bytes ke liye array banaya.
         // 32 bytes = 256 bits ki random entropy, jo token ko guess karna bahut mushkil banati hai.
@@ -67,8 +81,8 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
                 // Current time mein configured validity add karke expiry set kar rahe hain.
                 // Milliseconds ko nanoseconds mein convert karke LocalDateTime mein add kiya.
-                .expiryDate(LocalDateTime.now()
-                        .plusNanos(refreshTokenExpirationMs * 1_000_000))
+                // .expiryDate(LocalDateTime.now().plusNanos(refreshTokenExpirationMs * 1_000_000))
+                .expiryDate(LocalDateTime.now().plus(Duration.ofMillis(refreshTokenExpirationMs)))
 
                 // Naya token abhi revoked nahi hai, isliye false set kiya.
                 .revoked(false)
@@ -86,8 +100,13 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     @Override // Interface ke verifyRefreshToken() method ko implement kar rahe hain.
-    @Transactional // Method ko transaction mein execute karne ka explicit declaration.
-    public RefreshToken verifyRefreshToken(String rawToken) {
+    @Transactional(readOnly = true) // Method ko transaction mein execute karne ka explicit declaration.
+    public RefreshToken verifyRefreshToken(String rawToken)
+    {
+        // Null ya blank token ko hash karne ki zaroorat nahi.
+        if (rawToken == null || rawToken.isBlank()) {
+            throw new BusinessException("Refresh token is required");
+        }
 
         // Client ke bheje hue raw token ka wahi SHA-256 hash banaya.
         // Same token ka deterministic hash banega, jisse DB record search ho sake.
@@ -100,19 +119,18 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 .orElseThrow(() ->
                         new BusinessException("Invalid refresh token"));
 
-        // Check kar rahe hain ki token pehle revoke/logout/rotation ke kaaran
-        // invalid to nahi kiya gaya.
-        if (Boolean.TRUE.equals(refreshToken.getRevoked())) {
-
+        // Check kar rahe hain ki token pehle revoke/logout/rotation ke kaaran invalid to nahi kiya gaya.
+        // Logout ya rotation mein revoke hua token dobara use nahi ho sakta.
+        if (Boolean.TRUE.equals(refreshToken.getRevoked()))
+        {
             // Revoked token se naya Access Token issue nahi hona chahiye.
             throw new BusinessException("Refresh token has been revoked");
         }
 
-        // Check kar rahe hain ki token ki expiry time current time se pehle hai ya nahi.
-        if (refreshToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-
-            // Expired token reject karenge.
-            // Exception transaction rollback kar sakti hai,
+        // Expiry time current time ke barabar ya usse pehle ho to token expired maana jayega.
+        if(!refreshToken.getExpiryDate().isAfter(LocalDateTime.now()))
+        {
+            // Expired token reject karenge. Exception transaction rollback kar sakti hai,
             // isliye is method mein revoked status save karne ka claim nahi karenge.
             throw new BusinessException("Refresh token has expired");
         }
@@ -129,33 +147,35 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
         // SHA-256 hashing algorithm ka instance le rahe hain.
         try {
+            // SHA-256 ek hi input ke liye consistently same hash deta hai.
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
 
             // Raw token ko UTF-8 bytes mein convert karke SHA-256 hash banaya.
-            byte[] hash = digest.digest(
-                    rawToken.getBytes(StandardCharsets.UTF_8));
+            byte[] hash = digest.digest(rawToken.getBytes(StandardCharsets.UTF_8));
 
-            // Hash bytes ko hexadecimal string mein convert karne ke liye builder.
-            StringBuilder hex = new StringBuilder();
+//            // Hash bytes ko hexadecimal string mein convert karne ke liye builder.
+//            StringBuilder hex = new StringBuilder();
 
-            // Hash ke har byte ko process kar rahe hain.
-            for (byte b : hash) {
+//            // Hash ke har byte ko process kar rahe hain.
+//            for (byte b : hash)
+//            {
+//                // Har byte ko unsigned value ke roop mein interpret karke
+//                // 2 hexadecimal characters mein convert kar rahe hain.
+//                // %02x ensure karta hai ki single-digit byte ke liye leading zero aaye.
+//                hex.append(String.format("%02x", b & 0xff));
+//            }
+//
+//            // SHA-256 ke 32 bytes ka 64-character hexadecimal hash return hoga.
+//            return hex.toString();
 
-                // Har byte ko unsigned value ke roop mein interpret karke
-                // 2 hexadecimal characters mein convert kar rahe hain.
-                // %02x ensure karta hai ki single-digit byte ke liye leading zero aaye.
-                hex.append(String.format("%02x", b & 0xff));
-            }
-
-            // SHA-256 ke 32 bytes ka 64-character hexadecimal hash return hoga.
-            return hex.toString();
+            // 32 hash bytes ko 64-character hexadecimal string banayenge.
+            return HexFormat.of().formatHex(hash);
 
         } catch (NoSuchAlgorithmException exception) {
 
             // SHA-256 standard Java runtime mein available hota hai.
             // Agar unavailable ho, to unexpected runtime configuration error hai.
-            throw new IllegalStateException(
-                    "SHA-256 is unavailable", exception);
+            throw new IllegalStateException("SHA-256 is unavailable", exception);
         }
     }
 }

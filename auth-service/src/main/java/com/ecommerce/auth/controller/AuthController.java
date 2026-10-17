@@ -1,5 +1,7 @@
 package com.ecommerce.auth.controller;
 
+import com.ecommerce.auth.dto.request.RefreshTokenRequest;
+import org.springframework.http.HttpStatus;
 import com.ecommerce.auth.dto.request.LoginRequest;
 import com.ecommerce.auth.dto.request.RegisterRequest;
 import com.ecommerce.auth.dto.response.AuthResponse;
@@ -123,4 +125,24 @@ public class AuthController {
                         .build()
         );
     }
+
+
+    // POST /api/v1/auth/refresh
+    // Valid refresh token ke badle naya access token issue hoga.
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<LoginResponse>> refresh(@Valid @RequestBody RefreshTokenRequest request)
+    {
+        // Actual validation aur token generation service layer me hogi.
+        LoginResponse response = authenticationService.refreshAccessToken(request.getRefreshToken());
+
+        // Existing common response wrapper ka use kar rhe hain.
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.<LoginResponse>builder()
+                        .status(ResponseStatus.SUCCESS)
+                        .message("Access token refreshed successfully")
+                        .data(response)
+                        .build());
+    }
+
+
 }

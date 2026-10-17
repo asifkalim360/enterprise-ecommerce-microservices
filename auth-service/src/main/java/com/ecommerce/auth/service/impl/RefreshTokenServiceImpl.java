@@ -30,7 +30,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     // application.yml se refresh token ki validity milliseconds mein read hogi.
     // Example: 604800000 milliseconds = 7 days.
-    @Value("${refresh-expiration}")
+    @Value("${jwt.refresh-expiration}")
     private long refreshTokenExpirationMs;
 
     // Cryptographically secure random bytes generate karne ke liye object.

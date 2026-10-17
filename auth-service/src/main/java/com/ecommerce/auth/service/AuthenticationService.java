@@ -26,5 +26,9 @@ public interface AuthenticationService {
     // Matlab: LoginRequest login() -> LoginResponse
     LoginResponse login(LoginRequest request);
 
+    // Refresh token valid hua to naya access token issue karenge.
+    // Abhi refresh token rotate nahi hoga; rotation Step 4 mein aayegi.
+    LoginResponse refreshAccessToken(String refreshToken);
+
 
 }

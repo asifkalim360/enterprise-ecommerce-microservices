@@ -89,8 +89,6 @@ public class AuthenticationServiceImpl implements AuthenticationService
                 )
         );
 
-
-
         // Authentication successful ho chuki hai. Ab authentication object ko JwtService ke paas bhej rahe hain.
         // JwtService authenticated user ki information use karke JWT access token generate karegi.
         // Step 2: Authentication successful hone par Access Token generate karo
@@ -122,17 +120,17 @@ public class AuthenticationServiceImpl implements AuthenticationService
     @Override
     public LoginResponse refreshAccessToken(String rawRefreshToken) {
 
-        // Raw token ka hash check hoga; invalid, revoked ya expired token reject hoga.
-        RefreshToken storedToken =
-                refreshTokenService.verifyRefreshToken(rawRefreshToken);
+        // yahan pahle Raw token ka hash check hoga(matlab token validate hoga aur Auth user-ID niklega).
+        // invalid, revoked ya expired token yahin reject hoga.
+        RefreshToken storedToken = refreshTokenService.verifyRefreshToken(rawRefreshToken);
 
-        // Refresh token se Auth user ID milegi; User Service ko call nahi karna.
-        User user = userRepository.findById(storedToken.getUserId())
-                .orElseThrow(() -> new BusinessException("User not found"));
+        // Auth database se user load karo.
+        // Refresh token se Auth user ID milegi;User Service ko call nahi karna.
+        User user = userRepository.findById(storedToken.getUserId()).orElseThrow(() -> new BusinessException("User not found"));
 
+        // Latest user details aur authorities load karo.
         // Current user ki security details reload kar rahe hain.
-        UserDetails userDetails =
-                userDetailsService.loadUserByUsername(user.getEmail());
+        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
 
         // Password dobara verify nahi karna; refresh token pehle validate ho chuka hai.
         // Existing authorities ke saath Authentication object banayenge.
@@ -143,14 +141,17 @@ public class AuthenticationServiceImpl implements AuthenticationService
                         userDetails.getAuthorities()
                 );
 
-        // Existing common-lib JwtService se naya access token banega.
+        // Existing common-lib JwtService se naya access token generate hoga.
         String newAccessToken = jwtService.generateToken(authentication);
 
-        // Step 3 mein existing refresh token return hoga.
-        // Step 4 mein isko rotate karke purana token invalidate karenge.
+        // IMPORTANT: purana refresh token revoke hoga aur new token generate hoga.
+        // Agar token beech me kisi aur request ne use kar liya to rotation reject hogi aur response return nahi hoga.
+        String newRefreshToken = refreshTokenService.rotateRefreshToken(rawRefreshToken);
+
+        // Client ko purana refresh token dobara nahi dena hai islea newRefreshToken ko refreshToken me use karenge.
         return LoginResponse.builder()
                 .accessToken(newAccessToken)
-                .refreshToken(rawRefreshToken)
+                .refreshToken(newRefreshToken)
                 .tokenType("Bearer")
                 .build();
     }

@@ -12,4 +12,7 @@ public interface RefreshTokenService
     // valid token hone pe uska database record return hoga.
     RefreshToken verifyRefreshToken(String token);
 
+    // ye valid token to rotate karega matlab purane token ko revoke aur naya token ko create karega.
+    String rotateRefreshToken(String rawToken);
+
 }

@@ -178,4 +178,46 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
             throw new IllegalStateException("SHA-256 is unavailable", exception);
         }
     }
+
+
+    @Override
+    @Transactional
+    public String rotateRefreshToken(String rawToken)
+    {
+        // Client ka raw token DB me store nahi hota. Isliye pahle uska SHA-256 hash banayenge.
+        if(rawToken == null || rawToken.isBlank())
+        {
+            throw new BusinessException("Refresh token is required");
+        }
+
+        String tokenHash = hashToken(rawToken);
+
+        // Database row ko lock karke token fetch karenge. Esse concurrent rotation requests ko control karne me help milegi.
+        RefreshToken oldToken = refreshTokenRepository.findByTokenForUpdate(tokenHash).orElseThrow(() -> new BusinessException("Invalid refresh token"));
+
+        // Pahle use ho chuka token ya fhr logout me revoke hua token reject hoga.
+        if(Boolean.TRUE.equals(oldToken.getRevoked()))
+        {
+            throw new BusinessException("Refresh token has been revoked or already used");
+        }
+
+        // Expired token rotate nahi ho sakta hai.
+        if(!oldToken.getExpiryDate().isAfter(LocalDateTime.now()))
+        {
+            throw new BusinessException("Refresh token has expired");
+        }
+
+        // Purane token ka user ID new token ke liye use hoga.
+        Long userId = oldToken.getUserId();
+
+        // Purane token invalidate kar rahe hain.
+        oldToken.setRevoked(true);
+        refreshTokenRepository.save(oldToken);
+
+        // New random raw token generate hoga aur uska hash Db me save hoga.
+        // Dono operations esi transaction me honge.
+        // Agar new token save fail hua to purana token ka revoke bhi rollback hoga.
+        return createRefreshToken(userId);
+
+    }
 }

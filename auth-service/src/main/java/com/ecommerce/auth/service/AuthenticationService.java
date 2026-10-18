@@ -30,5 +30,8 @@ public interface AuthenticationService {
     // Abhi refresh token rotate nahi hoga; rotation Step 4 mein aayegi.
     LoginResponse refreshAccessToken(String refreshToken);
 
+    // Client ke refresh token ko revoke karke logout karega.
+    void logout(String refreshToken);
+
 
 }

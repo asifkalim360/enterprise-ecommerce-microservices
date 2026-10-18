@@ -144,5 +144,22 @@ public class AuthController {
                         .build());
     }
 
+    // POST /api/v1/auth/logout
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @Valid @RequestBody RefreshTokenRequest request) {
+
+        // Refresh token revoke karke logout karenge.
+        authenticationService.logout(request.getRefreshToken());
+
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .status(ResponseStatus.SUCCESS)
+                        .message("Logout successful")
+                        .data(null)
+                        .build()
+        );
+    }
+
 
 }

@@ -156,6 +156,14 @@ public class AuthenticationServiceImpl implements AuthenticationService
                 .build();
     }
 
+    @Override
+    public void logout(String refreshToken)
+    {
+        // Actual token validation aur revocation service layer me hogi.
+        refreshTokenService.revokeRefreshToken(refreshToken);
+    }
+
+
 
 
 }

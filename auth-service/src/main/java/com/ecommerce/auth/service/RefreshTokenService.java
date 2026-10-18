@@ -15,4 +15,7 @@ public interface RefreshTokenService
     // ye valid token to rotate karega matlab purane token ko revoke aur naya token ko create karega.
     String rotateRefreshToken(String rawToken);
 
+    // Logout ke waqt current refresh token invalidate karega.
+    void revokeRefreshToken(String rawToken);
+
 }

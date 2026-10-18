@@ -220,4 +220,33 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         return createRefreshToken(userId);
 
     }
+
+    @Override
+    @Transactional
+    public void revokeRefreshToken(String rawToken)
+    {
+        //Empty token par logout operation continue nahi karna hai.
+        if(rawToken == null || rawToken.isBlank())
+        {
+            throw new BusinessException("Refresh token is required");
+        }
+
+        // Database me raw-token nahi uska SHA-256 hash stored hota hai.
+        String tokenHash = hashToken(rawToken);
+
+        // Token nahi mila to invalid token reject hoga.
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(tokenHash).orElseThrow(() -> new BusinessException("Invalid refresh token"));
+
+        // Already revoked token ko dobara revoke karne ki zaroorat nahi.
+        if (Boolean.TRUE.equals(refreshToken.getRevoked()))
+        {
+            throw new BusinessException("Refresh token has already been revoked");
+        }
+
+        // Token ko parmanently unusable mark kar rahe hain.
+        refreshToken.setRevoked(true);
+
+        // Update status database me save hoga.
+        refreshTokenRepository.save(refreshToken);
+    }
 }

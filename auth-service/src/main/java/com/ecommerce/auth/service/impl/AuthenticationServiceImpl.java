@@ -89,20 +89,17 @@ public class AuthenticationServiceImpl implements AuthenticationService
                 )
         );
 
+        // Step 2: Auth DB se logged-in user ka record nikalo
+        User user = userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new BusinessException("User not found"));
+
         // Authentication successful ho chuki hai. Ab authentication object ko JwtService ke paas bhej rahe hain.
         // JwtService authenticated user ki information use karke JWT access token generate karegi.
-        // Step 2: Authentication successful hone par Access Token generate karo
-        String accessToken = jwtService.generateToken(authentication);
-
-        // Step 3: Auth DB se logged-in user ka record nikalo
-        User user = userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new BusinessException("User not found"));
+        // Step 3: Authentication successful hone Database user-ID ke saath access token generate karo.
+        String accessToken = jwtService.generateToken(authentication, user.getId());
 
         // Step 4: Refresh Token generate karo
         // Raw token client ko milega; database mein uska hash save hoga.
         String refreshToken = refreshTokenService.createRefreshToken(user.getId());
-
-//        // Authentication successful hone ke baad Access JWT generate karo
-//        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
         // Ab client ko LoginResponse return kar rahe hain. Builder Pattern ka use ho raha hai.
         // LoginResponse mein:accessToken, tokenType set kar rahe hain.
@@ -141,8 +138,9 @@ public class AuthenticationServiceImpl implements AuthenticationService
                         userDetails.getAuthorities()
                 );
 
-        // Existing common-lib JwtService se naya access token generate hoga.
-        String newAccessToken = jwtService.generateToken(authentication);
+        // Existing common-lib JwtService se new access token userId claim ke sath generate hoga.
+        String newAccessToken = jwtService.generateToken(authentication, user.getId());
+
 
         // IMPORTANT: purana refresh token revoke hoga aur new token generate hoga.
         // Agar token beech me kisi aur request ne use kar liya to rotation reject hogi aur response return nahi hoga.

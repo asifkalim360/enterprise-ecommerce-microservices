@@ -29,7 +29,7 @@ public class JwtService
     }
 
     // JWT GENERATION
-    public String generateToken(Authentication authentication)
+    public String generateToken(Authentication authentication, Long userId)
     {
         String username = authentication.getName();
 
@@ -45,6 +45,7 @@ public class JwtService
 
         return Jwts.builder()
                 .subject(username)
+                .claim("userId", userId)
                 .claim("role", role)
                 .issuedAt(now)
                 .expiration(expiry)
@@ -108,6 +109,25 @@ public class JwtService
         {
             return  false;
         }
+    }
+
+    // JwtServicec.java class me userId extract karne ka method add kar rahe hain.
+    // JWT se authenticated user ki database ID extract karo.
+    public Long extractUserId(String token)
+    {
+        Object userId = Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("userId");
+
+        if(userId instanceof Number number)
+        {
+            return number.longValue();
+        }
+
+        throw new IllegalArgumentException("JWT userId claim is missing or Invalid");
     }
 
 }

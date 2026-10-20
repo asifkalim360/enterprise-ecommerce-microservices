@@ -136,6 +136,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // extractUsername(token) -> "asif@gmail.com"
             String username = jwtService.extractUsername(token);
 
+            // JWT se authenticated user ki database ID extract kar rahe hain.
+            Long userId = jwtService.extractUserId(token);
+
             // ****************************************************
             // 7. JWT se role extract karo
             // ****************************************************
@@ -150,6 +153,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Dusri condition:SecurityContextHolder.getContext().getAuthentication() == null Matlab current request already authenticated nahi hai.
             // Agar authentication already present hai to unnecessary authentication dobara create nahi karenge.
             if (username != null &&
+                    userId != null &&
                     role != null &&
                     jwtService.isTokenValid(token) &&
                     SecurityContextHolder
@@ -171,12 +175,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Second argument: null -> password yahan verify nahi ho raha. JWT already identity proof provide kar raha hai.
                 // Third argument: List.of(authority) → user ke roles/permissions.
                 // Example: ROLE_USER , ROLE_ADMIN
+                // Username aur userId ko authenticated principal mein rakh rahe hain.
+                JwtUserPrincipal principal = new JwtUserPrincipal(username, userId);
+
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
-                                username,
+                                principal,
                                 null,
                                 List.of(authority)
-                            );
+                        );
 
                 // =========================================
                 // STEP 12: SecurityContext Me Authentication

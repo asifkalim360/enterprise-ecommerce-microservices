@@ -1,5 +1,6 @@
 package com.ecommerce.user.service.impl;
 
+import com.ecommerce.common.exception.BusinessException;
 import com.ecommerce.common.exception.ResourceNotFoundException;
 import com.ecommerce.common.integration.user.CreateUserFromAuthRequest;
 import com.ecommerce.user.dto.request.CreateUserRequest;
@@ -42,6 +43,7 @@ public class UserServiceImpl implements UserService {
         return userMapper.toResponse(savedUser);
     }
 
+    // ADMIN kisi bhi user ki profile dekh sakta hai.
     @Override
     public UserResponse getUserById(Long id)
     {
@@ -50,6 +52,7 @@ public class UserServiceImpl implements UserService {
         return userMapper.toResponse(user);
     }
 
+    // ADMIN kisi bhi profile ko update kar sakta hai.
     @Override
     public UserResponse updateUser(Long id, UpdateUserRequest request)
     {
@@ -57,6 +60,30 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         userMapper.updateEntity(user, request);
         User updatedUser = userRepository.save(user);
+        return userMapper.toResponse(updatedUser);
+    }
+
+    // Logged-in user ki apni profile.
+    @Override
+    public UserResponse getMyProfile(Long authUserId)
+    {
+        // JWT ke userId ko User-service DataBase ke authUserId se match karenge.
+        User user = userRepository.findByAuthUserId(authUserId).orElseThrow(() -> new ResourceNotFoundException("User profile not found for authentication user"));
+        return userMapper.toResponse(user);
+    }
+
+    // Logged-in user sirf apni profile update karega.
+    @Override
+    public UserResponse updateMyProfile(Long authUserId, UpdateUserRequest request)
+    {
+        // URL se aayi kisi bhi ID par bharosa nahi karna.
+        // Sirf authenticated user ki apni profile hi fetch karni hai.
+        User user = userRepository.findByAuthUserId(authUserId).orElseThrow(() -> new ResourceNotFoundException("user profile not found for authentication user"));
+
+        userMapper.updateEntity(user, request);
+
+        User updatedUser = userRepository.save(user);
+
         return userMapper.toResponse(updatedUser);
     }
 

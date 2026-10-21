@@ -37,6 +37,56 @@ public class SecurityConfig
                         // Baaki sabhi User APIs protected rahengi.
                         .anyRequest().authenticated()
                 )
+
+                .exceptionHandling(exception -> exception
+                        // Authentication missing ya invalid ho to 401 response.
+                        .authenticationEntryPoint((request, response, authException) ->
+                        {
+                            response.setStatus(
+                                    jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED
+                            );
+
+                            response.setContentType("application/json");
+
+                            com.fasterxml.jackson.databind.ObjectMapper objectMapper =
+                                    new com.fasterxml.jackson.databind.ObjectMapper()
+                                            .findAndRegisterModules();
+
+                            com.ecommerce.common.dto.ErrorResponse errorResponse =
+                                    com.ecommerce.common.dto.ErrorResponse.builder()
+                                            .status(401)
+                                            .error("Unauthorized")
+                                            .message("Authentication required or token is invalid")
+                                            .path(request.getRequestURI())
+                                            .build();
+
+                            objectMapper.writeValue(response.getOutputStream(), errorResponse);
+                        })
+
+                        // Authentication valid hai, lekin role ki permission nahi hai to 403.
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(
+                                    jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN
+                            );
+
+                            response.setContentType("application/json");
+
+                            com.fasterxml.jackson.databind.ObjectMapper objectMapper =
+                                    new com.fasterxml.jackson.databind.ObjectMapper()
+                                            .findAndRegisterModules();
+
+                            com.ecommerce.common.dto.ErrorResponse errorResponse =
+                                    com.ecommerce.common.dto.ErrorResponse.builder()
+                                            .status(403)
+                                            .error("Forbidden")
+                                            .message("You do not have permission to access this resource")
+                                            .path(request.getRequestURI())
+                                            .build();
+
+                            objectMapper.writeValue(response.getOutputStream(), errorResponse);
+                        })
+                )
+
                 .addFilterBefore(jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class);
         return http.build();

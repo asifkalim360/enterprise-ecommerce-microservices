@@ -199,8 +199,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // STEP 13: Invalid JWT Handle
         // ====================================================
         // Agar JWT invalid hua: JwtException - Agar username database/user source me nahi mila: UsernameNotFoundException: to yahan control aayega.
-        catch(JwtException | IllegalArgumentException ex)
-        {
+//        catch(JwtException | IllegalArgumentException ex)
+//        {
             // =================================================
             // Invalid JWT -> Authentication Set Nahi Hui
             // =================================================
@@ -208,7 +208,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Iska matlab: SecurityContext me authentication set nahi hua.
             // Aage SecurityConfig ka: .anyRequest().authenticated() -> decide karega ki protected endpoint ko access milega ya Spring Security authentication failure handle karega.
             // IMPORTANT: Production me logging/monitoring add ki ja sakti hai,lekin sensitive JWT/token ko logs me print nahi karna chahiye.
-        }
+//        }
 
 
         // ******************************************************************
@@ -217,6 +217,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Chahe: JWT valid tha ya fhir JWT invalid tha ya fhir authentication create nahi hua fhir bhi filter chain ko continue karna hai.
         // Agar JWT valid tha: SecurityContext me authentication already present hai.
         // Agar JWT invalid tha: Authentication absent rahegi aur Spring Security protected resource ke liye later decision lega.
+//        filterChain.doFilter(request, response);
+
+        catch (JwtException | IllegalArgumentException ex) {
+            // Diagnostic: JWT parsing/validation failure ka reason dekho.
+            System.err.println(
+                    "JWT authentication failed: " + ex.getClass().getSimpleName()
+                            + " - " + ex.getMessage()
+            );
+        }
         filterChain.doFilter(request, response);
     }
 }

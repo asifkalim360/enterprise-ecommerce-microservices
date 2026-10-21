@@ -11,9 +11,17 @@ public interface UserService {
 
     public UserResponse createUserFromAuth(CreateUserFromAuthRequest request);
 
+    // ADMIN kisi bhi user ki profile dekh sakta hai.
     public UserResponse getUserById(Long id);
 
+    // ADMIN kisi bhi profile ko update kar sakta hai.
     public UserResponse updateUser(Long id, UpdateUserRequest request);
+
+    // Logged-in user ki apni profile.
+    UserResponse getMyProfile(Long authUserId);
+
+    // Logged-in user sirf apni profile update karega.
+    UserResponse updateMyProfile(Long authUserId, UpdateUserRequest request);
 
     public void deactivateUser(Long id);
 

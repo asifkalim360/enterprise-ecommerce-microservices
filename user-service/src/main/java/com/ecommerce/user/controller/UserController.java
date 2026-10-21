@@ -1,5 +1,8 @@
 package com.ecommerce.user.controller;
 
+import com.ecommerce.common.security.JwtUserPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.ecommerce.common.dto.ApiResponse;
 import com.ecommerce.common.integration.user.CreateUserFromAuthRequest;
 import com.ecommerce.user.dto.request.CreateUserRequest;
@@ -21,6 +24,7 @@ public class UserController
 {
     private final UserService userService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ApiResponse<UserResponse>> createUser(
             @Valid @RequestBody CreateUserRequest request, HttpServletRequest httpRequest)
@@ -58,6 +62,7 @@ public class UserController
 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<UserResponse>> getUserById(
             @PathVariable Long id, HttpServletRequest httpRequest)
@@ -76,6 +81,7 @@ public class UserController
 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<UserResponse>> updateUser(
             @PathVariable Long id,
@@ -94,6 +100,46 @@ public class UserController
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponse>> getMyProfile(
+            @AuthenticationPrincipal JwtUserPrincipal principal,
+            HttpServletRequest httpRequest)
+    {
+        UserResponse user = userService.getMyProfile(principal.userId());
+
+        ApiResponse<UserResponse> response = ApiResponse.<UserResponse>builder()
+                .status(ResponseStatus.SUCCESS)
+                .message("Your profile feached successfully")
+                .data(user)
+                .path(httpRequest.getRequestURI())
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    @PutMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponse>> updateMyProfile(
+            @AuthenticationPrincipal JwtUserPrincipal principal,
+            @Valid @RequestBody UpdateUserRequest request,
+            HttpServletRequest httpRequest) {
+
+        UserResponse user = userService.updateMyProfile(
+                principal.userId(),
+                request
+        );
+
+        ApiResponse<UserResponse> response = ApiResponse.<UserResponse>builder()
+                .status(ResponseStatus.SUCCESS)
+                .message("Your profile updated successfully")
+                .data(user)
+                .path(httpRequest.getRequestURI())
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/deactivate")
     public ResponseEntity<ApiResponse<Void>> deactivateUser(
             @PathVariable Long id, HttpServletRequest httpRequest )

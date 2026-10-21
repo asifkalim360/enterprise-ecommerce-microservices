@@ -33,6 +33,7 @@ import org.springframework.stereotype.Component;
 
 // Java I/O operation ke liye IOException use hota hai.
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 
 // Spring ko bata rahe hain ki is class ko Spring Bean ke roop me manage karo.
@@ -51,7 +52,6 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         // Constructor se mila ObjectMapper class ke field me store kar rahe hain.
         this.objectMapper = objectMapper;
     }
-
 
     // AuthenticationEntryPoint interface ka method override kar rahe hain.
     // Jab Spring Security ko authentication problem milegi,
@@ -73,6 +73,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
         // Client ko bhejne ke liye hamara common ErrorResponse object create kar rahe hain.
         ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
 
                 // HTTP status 401 ko response ke status field me set kar rahe hain.
                 .status(HttpStatus.UNAUTHORIZED.value())
@@ -93,10 +94,10 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         // Actual HTTP response ka status code 401 Unauthorized set kar rahe hain.
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
 
-
+        // JSON response ko UTF-8 mein explicitly set kar rahe hain.
+        response.setCharacterEncoding("UTF-8");
         // Client ko bata rahe hain ki response JSON format me hai.
         response.setContentType("application/json");
-
 
         // ObjectMapper ErrorResponse Java object ko JSON me convert karke
         // HTTP response ke writer me likh raha hai.

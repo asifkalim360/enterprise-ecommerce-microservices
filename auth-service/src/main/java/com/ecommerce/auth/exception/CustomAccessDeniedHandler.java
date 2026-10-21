@@ -92,7 +92,8 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler
         // Actual HTTP response ka status code 403 Forbidden set kar rahe hain.
         response.setStatus(HttpStatus.FORBIDDEN.value());
 
-
+        // JSON response ko UTF-8 mein explicitly set kar rahe hain.
+        response.setCharacterEncoding("UTF-8");
         // Client ko bata rahe hain ki response JSON format me hai.
         response.setContentType("application/json");
 

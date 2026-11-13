@@ -3,6 +3,7 @@ package com.ecommerce.user.dto.response;
 import com.ecommerce.user.entity.UserStatus;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -10,8 +11,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Builder
-public class UserResponse {
-
+public class UserResponse
+{
     private Long id;
     private String name;
     private String phone;

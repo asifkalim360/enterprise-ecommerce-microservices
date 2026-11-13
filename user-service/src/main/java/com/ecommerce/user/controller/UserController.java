@@ -62,7 +62,8 @@ public class UserController
 
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+//  @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.userId")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<UserResponse>> getUserById(
             @PathVariable Long id, HttpServletRequest httpRequest)

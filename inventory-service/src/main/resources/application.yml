@@ -1,0 +1,121 @@
+# Inventory Service ka server port.
+# Hamare project mein har microservice ka alag port hai.
+# Auth = 8081, User = 8082, Product = 8083, Inventory = 8084.
+server:
+  port: 8084
+
+
+# Spring Boot application ki basic configuration.
+spring:
+
+  # Service ka naam define karta hai.
+  # Spring Boot isi naam se application ko identify karega.
+  application:
+    name: inventory-service
+
+
+  # MySQL database connection ki configuration.
+  datasource:
+
+    # Database URL:
+    # localhost = MySQL hamare local machine par run ho raha hai.
+    # 3306 = MySQL ka default port.
+    # ecommerce_inventory_db = Inventory Service ka database.
+    # useSSL=false = Local development mein SSL connection disable.
+    # serverTimezone=UTC = Database timezone UTC set karta hai.
+    url: jdbc:mysql://localhost:3306/ecommerce_inventory_db?useSSL=false&serverTimezone=UTC
+
+    # MySQL database ka username.
+    username: root
+
+    # MySQL database ka password.
+    # YOUR_MYSQL_PASSWORD ko apne actual MySQL password se replace karna hai.
+    password: asif
+
+    # MySQL JDBC driver class.
+    # JDBC driver Java application aur MySQL ke beech connection establish karta hai.
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+  # JPA (Java Persistence API) ki configuration.
+  # JPA Java objects ko database tables ke saath map karne mein help karta hai.
+  jpa:
+
+    # Hibernate ORM ki configuration.
+    hibernate:
+
+      # update ka matlab:
+      # Hibernate entity classes ke according database schema update karega.
+      # Existing table ka data normally delete nahi karta.
+      # Development ke liye useful hai.
+      ddl-auto: update
+
+    # Hibernate ki generated SQL queries console mein print nahi hongi.
+    # Production-style clean logs ke liye false rakha hai.
+    show-sql: false
+
+    # Open EntityManager in View ko disable karta hai.
+    # Database session ko poori HTTP request ke duration tak open nahi rakhta.
+    # Lazy loading aur database access ko service/transaction layer tak
+    # properly manage karne mein help karta hai.
+    open-in-view: false
+
+    properties:
+      hibernate:
+
+        # Hibernate ki generated SQL queries ko readable format mein
+        # format karta hai.
+        # show-sql false hai, isliye console mein queries print nahi hongi.
+        # Logging enable karne par ye formatting useful hogi.
+        format_sql: true
+
+
+# Spring Boot Actuator ki configuration.
+# Actuator application monitoring aur health checking provide karta hai.
+management:
+
+  endpoints:
+    web:
+      exposure:
+
+        # Sirf health aur info endpoints ko HTTP ke through expose karenge.
+        # /actuator/health = Application running hai ya nahi.
+        # /actuator/info = Application ki basic information.
+        include: health,info
+
+  endpoint:
+    health:
+
+      # Health endpoint par detailed health information show karega.
+      # Jaise database connection ki health information.
+      show-details: always
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET} # environment variable
+  expiration: 900000
+  refresh-expiration: 604800000
+
+
+
+
+
+#=================================================================
+#Configuration	          -           Purpose
+#server.port	          -           Service ka port
+#spring.application.name  -           Service ki identity
+#datasource	              -           MySQL connection
+#ddl-auto: update	      -           Entity ke according DB schema update
+#show-sql	              -           SQL queries console mein print karna
+#open-in-view	          -           Request ke dauran EntityManager open rakhna
+#format_sql	              -           SQL queries ko readable banana
+#management	              -           Monitoring configuration
+#show-details	          -           Health endpoint ki detailed information
+#===================================================================
+
+#important industry-level point:
+#show-details: always development mein theek hai, lekin production mein ise carefully configure karna chahiye.
+              #Isse database aur doosre components ki internal health details expose ho sakti hain.
+
+#Aur YOUR_MYSQL_PASSWORD: ki jagah actual password abhi local development ke liye use kar sakte ho.
+                    #Production mein environment variables ya secrets management use karenge.
